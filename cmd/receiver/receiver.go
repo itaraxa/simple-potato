@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+
+	"github.com/itaraxa/simple-potato/pkg/fileOperation/fileOperation"
 )
 
 func main() {
@@ -21,4 +23,12 @@ func main() {
 	}
 	fmt.Println(config.Log_File)
 	fmt.Println(config.Log_Level)
+
+	myFile := new(fileOperation.MyFile)
+	err = myFile.Init("test/file1.txt")
+	if err != nil {
+		log.Println("Error opening file: %v", err)
+	}
+	fmt.Printf("Filename is %v.\n CRC sum is %v", myFile.Name, myFile.CRC)
+
 }
