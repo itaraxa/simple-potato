@@ -1,12 +1,15 @@
 package fileOperation
 
-import "fmt"
+import (
+	"crypto/md5"
+	"fmt"
+)
 
 type MyFile struct {
 	Name string
 	Size uint32
 	Data []byte
-	CRC  string
+	MD5  [16]byte
 }
 
 /* Инициализация файла
@@ -16,19 +19,23 @@ type MyFile struct {
 func (f *MyFile) Init(filePath string) error {
 	f.Name = filePath
 	f.Size = 10
-	f.Data = []byte{1, 2, 3, 4}
+	f.Data = []byte{71, 72, 73, 74}
+
+	f.calcMD5()
+
 	return nil
 }
 
 /* Расчет контрольной суммы
  */
-func (f *MyFile) CalcCRC() (md5summ string, err error) {
-	var data []byte
-	data = append(data, []byte(f.Name)...)
-	data = append(data, []byte(string(f.Size))...)
-	data = append(data, f.Data...)
+func (f *MyFile) calcMD5() {
+	f.MD5 = md5.Sum(f.Data)
+}
 
-	f.CRC = string(data)
-	fmt.Printf("Source DATA for CRC calculation is %v", data)
-	return md5summ, nil
+/* Форматированный вывод содержимого структуры MyFile
+ */
+func (f *MyFile) PrettyOut() {
+	fmt.Println("Filename: ", f.Name)
+	fmt.Println("Size of file: ", f.Size, "bytes")
+	fmt.Printf("md5: %x\n", f.MD5)
 }
