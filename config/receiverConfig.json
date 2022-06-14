@@ -1,8 +1,6 @@
 {
-    "Log Level" : "DEBUG",
-    "Log File" : "log/receiver.log",
     "Listen Port" : "8080",
     "Listen Address" : "",
-    "Directory for temporary files" : "tmp",
-    "Directory for downloaded files" : "downloads"
+    "Directory for temporary files" : "test/tmp",
+    "Directory for downloaded files" : "test/downloads"
 }
