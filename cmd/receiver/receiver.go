@@ -2,22 +2,23 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
-	"github.com/itaraxa/simple-potato/pkg/fileOperation"
+	"github.com/itaraxa/simple-potato/internal/fileOperation"
 )
 
 func main() {
 
 	// Initialize logging
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.Lshortfile)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	infoLog.Println("START PROGRAMM")
 
 	// Read configuration file
-	configFile := flag.String("config", "receiver.json", "Configuration file in json")
+	configFile := flag.String("config", "receiver.json", "Configuration file for receiver")
 	flag.Parse()
 	infoLog.Printf("Open configuration file: %s", *configFile)
 	config := new(receiverConfig)
@@ -39,6 +40,8 @@ func main() {
 	}
 	fileOperation.PathCleaner(files, config.Directory_for_temporary_files)
 
+	files, _ = fileOperation.FilterFiles(files)
+
 	for _, file := range files {
 		infoLog.Printf("Move file SRC=%s DST=%s", file, config.Directory_for_downloaded_files+string(os.PathSeparator)+file)
 
@@ -46,6 +49,7 @@ func main() {
 		if err != nil {
 			errorLog.Printf("error moving file: %s : %s", file, err)
 		}
+		fmt.Printf("%s = %v\n", file, []byte(file))
 	}
 
 	// Передача файла по сети

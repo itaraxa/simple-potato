@@ -68,6 +68,30 @@ func ScanDir(dirPath string) ([]string, error) {
 	return tempFileList, nil
 }
 
+/* Функция фильтр файлов по расширению
+ */
+func FilterFiles(files []string) (filesAccept, filesReject []string) {
+	allowedTypes := strings.Split("txt|pdf", "|")
+
+	for _, file := range files {
+		flag := false
+		for _, alloallowedType := range allowedTypes {
+			if file[len(file)-len(alloallowedType):] == alloallowedType {
+				flag = true
+				break
+			}
+		}
+		if flag {
+			filesAccept = append(filesAccept, file)
+			// fmt.Println("Accepted: ", file)
+		} else {
+			filesReject = append(filesReject, file)
+			// fmt.Println("Rejected: ", file)
+		}
+	}
+	return
+}
+
 /* Функция для удаления префикса/"временной директории" из имен файла
  */
 func PathCleaner(fileNames []string, prefix string) error {

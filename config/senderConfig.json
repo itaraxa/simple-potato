@@ -1,8 +1,6 @@
 {
-    "Log Level" : "Debug",
-    "Log File" : "log/sender.log",
     "Send to Port" : "8080",
-    "Send to Address" : "",
+    "Send to Address" : "127.0.0.1",
     "Directory for temporary files" : "tmp",
     "Directory for uploaded files" : "downloads"
 }
