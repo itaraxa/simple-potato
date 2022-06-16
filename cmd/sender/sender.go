@@ -24,7 +24,7 @@ func main() {
 	}
 	err = config.checkConfig()
 	if err != nil {
-		errorLog.Fatalln("INcorrct parametr in configuration file: ", err)
+		errorLog.Fatalln("Incorrect parameter in configuration file: ", err)
 	}
 
 	infoLog.Print("Try to send file")
@@ -32,4 +32,27 @@ func main() {
 	if err != nil {
 		errorLog.Printf("Error sending file: %s", err)
 	}
+
+	// infoLog.Printf("Search files in temporary folder: %s", config.DirectoryForTemporaryFiles)
+	// files, err := fileOperation.ScanDir(config.DirectoryForTemporaryFiles)
+	// if err != nil {
+	// 	errorLog.Println("scanning directory error: ", err)
+	// }
+	// fileOperation.PathCleaner(files, config.DirectoryForTemporaryFiles)
+
+	// files, _ = fileOperation.FilterFiles(files)
+
+	// for _, file := range files {
+
+	// }
+
+	// for _, file := range files {
+	// 	infoLog.Printf("Move file SRC=%s DST=%s", file, config.DirectoryForUploadedFiles+string(os.PathSeparator)+file)
+
+	// 	err = fileOperation.MoveFile(config.DirectoryForTemporaryFiles+string(os.PathSeparator)+file, config.DirectoryForUploadedFiles+string(os.PathSeparator)+file)
+	// 	if err != nil {
+	// 		errorLog.Printf("error moving file: %s : %s", file, err)
+	// 	}
+	// }
+
 }

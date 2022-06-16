@@ -1,6 +1,6 @@
 {
-    "Send to Port" : "8080",
+    "Send to Port" : "8081",
     "Send to Address" : "127.0.0.1",
-    "Directory for temporary files" : "tmp",
+    "Directory for temporary files" : "test/tmp",
     "Directory for uploaded files" : "downloads"
 }
