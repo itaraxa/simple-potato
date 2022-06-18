@@ -1,6 +1,7 @@
 {
-    "Listen Port" : "8080",
-    "Listen Address" : "",
+    "Local Port" : "30000",
+    "Local Address" : "127.0.0.1",
+    "Remote Address" : "127.0.0.1",
     "Directory for temporary files" : "test/tmp",
     "Directory for downloaded files" : "test/downloads"
 }

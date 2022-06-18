@@ -229,3 +229,23 @@ func MoveFile(sourceFile string, destFile string) (err error) {
 	}
 	return nil
 }
+
+/* Запись данных в файл с указанным именем.
+Если указанная для сохранения директория не существует, она создается
+*/
+func WriteFileToDisk(fileName string, data []byte) error {
+
+	// Создать директорию
+	dir := strings.Join(strings.Split(fileName, string(os.PathSeparator))[:strings.Count(fileName, string(os.PathSeparator))], string(os.PathSeparator))
+	if err := os.MkdirAll(dir, 0760); err != nil {
+		return fmt.Errorf("error creating directory: %s : %s", dir, err)
+	}
+	fmt.Printf("Directory [%s] created", dir)
+
+	// Записать данные в файл
+	if err := os.WriteFile(fileName, data, 0666); err != nil {
+		return fmt.Errorf("error writing file: %s", err)
+	}
+
+	return nil
+}

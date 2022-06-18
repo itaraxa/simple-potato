@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"github.com/itaraxa/simple-potato/internal/fileOperation"
 	"github.com/itaraxa/simple-potato/internal/networkOperation"
@@ -49,10 +50,24 @@ func main() {
 	var SessionID uint32
 	SessionID = 0
 
-	infoLog.Printf("Init connection to %s", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
-	con, err := net.Dial("udp4", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
+	// infoLog.Printf("Init connection to %s", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
+	// con, err := net.Dial("udp4", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
+	// if err != nil {
+	// 	errorLog.Panicf("Error init connection: %s", err)
+	// }
+	// defer con.Close()
+
+	remoteAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
 	if err != nil {
-		errorLog.Panicf("Error init connection: %s", err)
+		errorLog.Fatalf("Incorrect destination address: %s", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
+	}
+	localAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%s", config.SendFromAddress, "0"))
+	if err != nil {
+		errorLog.Fatalf("Incorrect local address: %s", fmt.Sprintf("%s:%s", config.SendFromAddress, "0"))
+	}
+	con, err := net.DialUDP("udp4", localAddr, remoteAddr)
+	if err != nil {
+		errorLog.Fatalf("Error init connection: %s", err)
 	}
 	defer con.Close()
 
@@ -104,6 +119,8 @@ func main() {
 			errorLog.Printf("Error send control message: %s", err)
 		}
 		infoLog.Printf("End sending command packet: SessionID = %x", SessionID)
+
+		time.Sleep(500 * time.Millisecond)
 
 	}
 	infoLog.Printf("End connection to %s", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))

@@ -50,9 +50,15 @@ func (cm *ControlMsg) PayLoad(SessionID uint32, command byte, data []byte) error
 /* Передача данных в установленное подключение
  */
 func (cm *ControlMsg) Send(con net.Conn) error {
-	if _, err := con.Write(cm.pocket); err != nil {
+	// if _, err := con.Write(cm.pocket); err != nil {
+	// 	return fmt.Errorf("error send data: %s", err)
+	// }
+	n, err := con.Write(cm.pocket)
+	if err != nil {
+		fmt.Printf(">>> Send %d/%d bytes\n", n, len(cm.pocket))
 		return fmt.Errorf("error send data: %s", err)
 	}
+	fmt.Printf(">>> Send %d/%d bytes\n", n, len(cm.pocket))
 	return nil
 }
 
@@ -80,9 +86,15 @@ func (mm *MetadataMsg) PayLoad(SessionID uint32, compressing byte, t fileOperati
 /* Создание подключения и передача данных
  */
 func (mm *MetadataMsg) Send(con net.Conn) error {
-	if _, err := con.Write(mm.pocket); err != nil {
+	// if _, err := con.Write(mm.pocket); err != nil {
+	// 	return fmt.Errorf("error send data: %s", err)
+	// }
+	n, err := con.Write(mm.pocket)
+	if err != nil {
+		fmt.Printf(">>> Send %d/%d bytes\n", n, len(mm.pocket))
 		return fmt.Errorf("error send data: %s", err)
 	}
+	fmt.Printf(">>> Send %d/%d bytes\n", n, len(mm.pocket))
 	return nil
 }
 
@@ -122,12 +134,30 @@ func (dm *DataMsg) PayLoad(SessionID uint32, compressing byte, t fileOperation.M
  */
 func (dm *DataMsg) Send(con net.Conn) error {
 	for _, chank := range dm.pockets {
-		if _, err := con.Write(chank); err != nil {
-			return fmt.Errorf("error send data: %s", err)
-		}
+		// if _, err := con.Write(chank); err != nil {
+		// 	return fmt.Errorf("error send data: %s", err)
+		// }
 		// n, err := con.Write(chank)
 		// fmt.Printf(">>> Data package send: %d ERR: %s\n", n, err)
+
+		n, err := con.Write(chank)
+		if err != nil {
+			fmt.Printf(">>> Send %d/%d bytes\n", n, len(chank))
+			return fmt.Errorf("error send data: %s", err)
+		}
+		fmt.Printf(">>> Send %d/%d bytes\n", n, len(chank))
 	}
 
 	return nil
+}
+
+func ParseMsgType(input byte) (string, error) {
+	if input == byte(1) {
+		return "META", nil
+	} else if input == byte(2) {
+		return "DATA", nil
+	} else if input == byte(4) {
+		return "CMD", nil
+	}
+	return "????", fmt.Errorf("unknown message type: 0x%x", input)
 }

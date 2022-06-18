@@ -7,10 +7,11 @@ import (
 )
 
 type receiverConfig struct {
-	Directory_for_downloaded_files string `json:"Directory for downloaded files"`
-	Directory_for_temporary_files  string `json:"Directory for temporary files"`
-	Listen_Address                 string `json:"Listen Address"`
-	Listen_Port                    string `json:"Listen Port"`
+	DirectoryForFownloadedFiles string `json:"Directory for downloaded files"`
+	DirectoryForTemporaryFiles  string `json:"Directory for temporary files"`
+	RemoteAddress               string `json:"Remote Address"`
+	LocalPort                   string `json:"Local Port"`
+	LocalAddress                string `json:"Local Address"`
 }
 
 /* Функция для чтения параметров конфигурации из файла, с указанным именем
@@ -39,11 +40,11 @@ func (c *receiverConfig) checkConfig() error {
 	// }
 
 	// Check directoryes exist
-	if _, err := os.Stat(c.Directory_for_temporary_files); os.IsNotExist(err) {
-		return fmt.Errorf("directory %s not exist: %s", c.Directory_for_temporary_files, err)
+	if _, err := os.Stat(c.DirectoryForTemporaryFiles); os.IsNotExist(err) {
+		return fmt.Errorf("directory %s not exist: %s", c.DirectoryForTemporaryFiles, err)
 	}
-	if _, err := os.Stat(c.Directory_for_downloaded_files); os.IsNotExist(err) {
-		return fmt.Errorf("directory %s not exist: %s", c.Directory_for_downloaded_files, err)
+	if _, err := os.Stat(c.DirectoryForFownloadedFiles); os.IsNotExist(err) {
+		return fmt.Errorf("directory %s not exist: %s", c.DirectoryForFownloadedFiles, err)
 	}
 
 	return nil

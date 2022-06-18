@@ -9,6 +9,7 @@ import (
 type senderConfig struct {
 	SendToPort                 string `json:"Send to Port"`
 	SendToAddress              string `json:"Send to Address"`
+	SendFromAddress            string `json:"Send from Address"`
 	DirectoryForTemporaryFiles string `json:"Directory for temporary files"`
 	DirectoryForUploadedFiles  string `json:"Directory for uploaded files"`
 	CycleTimeMs                string `json:"Cycle time (ms)"`
