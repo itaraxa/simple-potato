@@ -1,91 +1,133 @@
 package networkOperation
 
+import (
+	"encoding/binary"
+	"fmt"
+	"net"
+
+	"github.com/itaraxa/simple-potato/internal/fileOperation"
+)
+
 type Msg interface {
 	Init() error
 	PayLoad() error
 	Send() error
 }
 
-type ConnectionParams struct {
-	DestIP    string
-	DestPort  string
-	SessionID uint32
-}
-
+/* Коммандное сообщение
+Команды:
+1 - начало отправки сообщения
+2 - конец отправки сообщения
+3 - ?
+*/
 type ControlMsg struct {
-	ConnectionParams
-	Command string
-	Data    []byte
+	pocket []byte
 }
 
 type MetadataMsg struct {
-	ConnectionParams
-	Compressing        byte
-	FileName           string
-	FileNameLength     uint32
-	FileSize           uint32
-	CompressedFileSize uint32
-	FileMD5            [16]byte
-	CompressedFileMD5  [16]byte
+	pocket []byte
 }
 
 type DataMsg struct {
-	ConnectionParams
-	ChankNumber uint32
-	ChankSize   uint32
-	Data        []byte
+	pockets [][]byte
 }
 
-/* Задаем настройки подключения
+/* Задание полезное загрузки
  */
-func (cm *ControlMsg) Init(DestIP, DestPort string, SessionID uint32) error {
+func (cm *ControlMsg) PayLoad(SessionID uint32, command byte, data []byte) error {
+	cm.pocket = append(cm.pocket, []byte("RASU")...)
+	cm.pocket = append(cm.pocket, 4) // Тип сообщения "4"
+
+	buf := make([]byte, binary.MaxVarintLen64)
+	_ = binary.PutVarint(buf, int64(SessionID))
+	cm.pocket = append(cm.pocket, buf...)
+	cm.pocket = append(cm.pocket, command)
+	cm.pocket = append(cm.pocket, data...)
+	cm.pocket = append(cm.pocket, []byte("\r\n")...)
+	return nil
+}
+
+/* Передача данных в установленное подключение
+ */
+func (cm *ControlMsg) Send(con net.Conn) error {
+	if _, err := con.Write(cm.pocket); err != nil {
+		return fmt.Errorf("error send data: %s", err)
+	}
 	return nil
 }
 
 /* Задание полезное загрузки
  */
-func (cm *ControlMsg) PayLoad() error {
+func (mm *MetadataMsg) PayLoad(SessionID uint32, compressing byte, t fileOperation.MetaFile) error {
+	mm.pocket = append(mm.pocket, []byte("RASU")...)
+	mm.pocket = append(mm.pocket, 1)           // Тип сообщения "1"
+	mm.pocket = append(mm.pocket, compressing) // Указание сжатия
+	buf := make([]byte, binary.MaxVarintLen64)
+	_ = binary.PutVarint(buf, int64(SessionID)) // Запись ID сессии
+	mm.pocket = append(mm.pocket, buf...)
+	_ = binary.PutVarint(buf, int64(t.NameLength))
+	mm.pocket = append(mm.pocket, buf...) // Запись длины имени файла
+	_ = binary.PutVarint(buf, int64(t.CompressedFileSize))
+	mm.pocket = append(mm.pocket, buf...) // Запись размера сжатого файла
+	mm.pocket = append(mm.pocket, t.FileMD5[:]...)
+	mm.pocket = append(mm.pocket, t.CompressedFileMD5[:]...)
+	mm.pocket = append(mm.pocket, []byte(t.Name)...)
+	mm.pocket = append(mm.pocket, []byte("\r\n")...)
+
 	return nil
 }
 
 /* Создание подключения и передача данных
  */
-func (cm *ControlMsg) Send() error {
-	return nil
-}
-
-/* Задаем настройки подключения
- */
-func (mm *MetadataMsg) Init(DestIP, DestPort string, SessionID uint32) error {
+func (mm *MetadataMsg) Send(con net.Conn) error {
+	if _, err := con.Write(mm.pocket); err != nil {
+		return fmt.Errorf("error send data: %s", err)
+	}
 	return nil
 }
 
 /* Задание полезное загрузки
  */
-func (mm *MetadataMsg) PayLoad() error {
+func (dm *DataMsg) PayLoad(SessionID uint32, compressing byte, t fileOperation.MetaFile) error {
+	pocketSize := 500
+	for i := 0; i <= int(t.CompressedFileSize)/pocketSize; i++ {
+		temp := make([]byte, 0, pocketSize)
+		temp = append(temp, []byte("RASU")...)
+		temp = append(temp, 2)
+		buf := make([]byte, binary.MaxVarintLen64)
+		_ = binary.PutVarint(buf, int64(SessionID))
+		temp = append(temp, buf...)
+		_ = binary.PutVarint(buf, int64(i))
+		temp = append(temp, buf...)
+
+		a := i
+		b := i + pocketSize
+		if b > int(t.CompressedFileSize) {
+			b = int(t.CompressedFileSize)
+		}
+		chankSize := b - a
+		_ = binary.PutVarint(buf, int64(chankSize))
+		temp = append(temp, buf...)
+		temp = append(temp, t.CompressedData[a:b]...)
+		temp = append(temp, []byte("\r\n")...)
+
+		dm.pockets = append(dm.pockets, temp)
+		// fmt.Printf("Chank count = %d\n", len(dm.pockets))
+	}
+
 	return nil
 }
 
 /* Создание подключения и передача данных
  */
-func (mm *MetadataMsg) Send() error {
-	return nil
-}
+func (dm *DataMsg) Send(con net.Conn) error {
+	for _, chank := range dm.pockets {
+		if _, err := con.Write(chank); err != nil {
+			return fmt.Errorf("error send data: %s", err)
+		}
+		// n, err := con.Write(chank)
+		// fmt.Printf(">>> Data package send: %d ERR: %s\n", n, err)
+	}
 
-/* Задаем настройки подключения
- */
-func (dm *DataMsg) Init(DestIP, DestPort string, SessionID uint32) error {
-	return nil
-}
-
-/* Задание полезное загрузки
- */
-func (dm *DataMsg) PayLoad() error {
-	return nil
-}
-
-/* Создание подключения и передача данных
- */
-func (dm *DataMsg) Send() error {
 	return nil
 }

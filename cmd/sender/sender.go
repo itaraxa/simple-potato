@@ -2,10 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"net"
 	"os"
 
 	"github.com/itaraxa/simple-potato/internal/fileOperation"
+	"github.com/itaraxa/simple-potato/internal/networkOperation"
 )
 
 func main() {
@@ -33,48 +36,77 @@ func main() {
 		errorLog.Fatalf("Cannot switch to temporary folder: %s", config.DirectoryForTemporaryFiles)
 	}
 
-	// infoLog.Print("Try to send file")
-	// err = networkOperation.SendFile("test/tmp/2.txt2", config.SendToAddress, config.SendToPort)
-	// if err != nil {
-	// 	errorLog.Printf("Error sending file: %s", err)
-	// }
-
 	infoLog.Println("Search files in current work directory")
 	fileNames, err := fileOperation.ScanDir(".")
 	if err != nil {
 		errorLog.Println("scanning directory error: ", err)
 	}
 
-	// fmt.Print("\nСписок файлов до фильтра:")
-	// for _, fileName := range fileNames {
-	// 	fmt.Println(fileName)
-	// }
-
 	infoLog.Print("Filter allowed file types")
 	fileNames, _ = fileOperation.FilterFiles(fileNames, config.AllowedFileTypes)
 
-	// fmt.Println("\nСписок файлов после фильтра:")
-	// for _, fileName := range fileNames {
-	// 	fmt.Println(fileName)
-	// }
-
 	// Sending files
+	var SessionID uint32
+	SessionID = 0
+
+	infoLog.Printf("Init connection to %s", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
+	con, err := net.Dial("udp4", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
+	if err != nil {
+		errorLog.Panicf("Error init connection: %s", err)
+	}
+	defer con.Close()
+
 	for _, fileName := range fileNames {
+		infoLog.Printf("Start send file: %s", fileName)
 		t := new(fileOperation.MetaFile)
 		if err := t.Init(fileName); err != nil {
 			errorLog.Printf("Error reading file: %s", err)
 		}
-		t.PrettyOut()
+
+		SessionID += 1
+
+		infoLog.Printf("Start sending command packet: SessionID = %x", SessionID)
+		cm := new(networkOperation.ControlMsg)
+		if err := cm.PayLoad(SessionID, 1, []byte(fileName)); err != nil {
+			errorLog.Printf("Error create payload for message: %s", err)
+		}
+		if err := cm.Send(con); err != nil {
+			errorLog.Printf("Error send control message: %s", err)
+		}
+		infoLog.Printf("End sending command packet: SessionID = %x", SessionID)
+
+		infoLog.Printf("Start sending metadata packet: SessionID = %x, File = %s", SessionID, fileName)
+		mm := new(networkOperation.MetadataMsg)
+		if err := mm.PayLoad(SessionID, 9, *t); err != nil {
+			errorLog.Printf("Error create payload for message: %s", err)
+		}
+		if err := mm.Send(con); err != nil {
+			errorLog.Printf("Error send metadata message: %s", err)
+		}
+		infoLog.Printf("End sending metadata packet: SessionID = %x, File = %s", SessionID, fileName)
+
+		infoLog.Printf("Start sending data packets: SessionID = %x, File = %s", SessionID, fileName)
+		dm := new(networkOperation.DataMsg)
+		if err := dm.PayLoad(SessionID, 9, *t); err != nil {
+			errorLog.Printf("Error create payload for message: %s", err)
+		}
+		if err := dm.Send(con); err != nil {
+			errorLog.Printf("Error send data message: %s", err)
+		}
+		infoLog.Printf("End sending data packets: SessionID = %x, File = %s", SessionID, fileName)
+
+		infoLog.Printf("Start sending command packet: SessionID = %x", SessionID)
+		cm2 := new(networkOperation.ControlMsg)
+		if err := cm2.PayLoad(SessionID, 2, []byte("")); err != nil {
+			errorLog.Printf("Error create payload for message: %s", err)
+		}
+		if err := cm2.Send(con); err != nil {
+			errorLog.Printf("Error send control message: %s", err)
+		}
+		infoLog.Printf("End sending command packet: SessionID = %x", SessionID)
 
 	}
+	infoLog.Printf("End connection to %s", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
 
-	// for _, file := range fileNames {
-	// 	infoLog.Printf("Move file SRC=%s DST=%s", file, config.DirectoryForUploadedFiles+string(os.PathSeparator)+file)
-
-	// 	err = fileOperation.MoveFile(config.DirectoryForTemporaryFiles+string(os.PathSeparator)+file, config.DirectoryForUploadedFiles+string(os.PathSeparator)+file)
-	// 	if err != nil {
-	// 		errorLog.Printf("error moving file: %s : %s", file, err)
-	// 	}
-	// }
 	infoLog.Println("END PROGRAMM")
 }

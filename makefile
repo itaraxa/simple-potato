@@ -3,9 +3,9 @@ build:
 	go build -o out/sender cmd/sender/*.go
 
 run: build
-	nc -u -l 8080 > log/nc.log &
-	out/receiver --config config/receiverConfig.json &
-	out/sender --config config/senderConfig.json
+	nc -u -l 8081 > log/nc.log &
+	out/sender --config config/senderConfig.json > log/sender.log 2> log/sender.log
+	killall nc
 
 run_with_log: build
 	out/receiver --config config/receiverConfig.json >> log/receiver.log 2>> log/receiver.log &
