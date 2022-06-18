@@ -9,10 +9,6 @@ import (
 	"os"
 )
 
-func kek() error {
-	return nil
-}
-
 /* Функция отправки файла по сети, используя udp
  */
 func SendFile(fileName string, destIP string, destPort string) (err error) {
@@ -44,10 +40,10 @@ func SendFile(fileName string, destIP string, destPort string) (err error) {
 		fileData = append(fileData, chank[:readTotal]...)
 	}
 	// fileSize, err := file.Read(fileData)
-	fmt.Printf("fileSize (%s) = %d bytes\nFile data: %s", fileName, fileSize, string(fileData))
-	if err != nil {
-		return fmt.Errorf("error readinf file %s : %s", fileName, err)
-	}
+	// fmt.Printf("fileSize (%s) = %d bytes\nFile data: %s", fileName, fileSize, string(fileData))
+	// if err != nil {
+	// 	return fmt.Errorf("error readinf file %s : %s", fileName, err)
+	// }
 	// buf := make([]byte, 1024)
 
 	var header [512]byte

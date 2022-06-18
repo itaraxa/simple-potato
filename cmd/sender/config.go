@@ -7,10 +7,13 @@ import (
 )
 
 type senderConfig struct {
+	SendToPort                 string `json:"Send to Port"`
+	SendToAddress              string `json:"Send to Address"`
 	DirectoryForTemporaryFiles string `json:"Directory for temporary files"`
 	DirectoryForUploadedFiles  string `json:"Directory for uploaded files"`
-	SendToAddress              string `json:"Send to Address"`
-	SendToPort                 string `json:"Send to Port"`
+	CycleTimeMs                string `json:"Cycle time (ms)"`
+	Compression                string `json:"Compression"`
+	AllowedFileTypes           string `json:"Allowed file types"`
 }
 
 /* Чтение параметров конфигурации их файла

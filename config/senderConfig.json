@@ -2,5 +2,8 @@
     "Send to Port" : "8081",
     "Send to Address" : "127.0.0.1",
     "Directory for temporary files" : "test/tmp",
-    "Directory for uploaded files" : "downloads"
+    "Directory for uploaded files" : "downloads",
+    "Cycle time (ms)" : "1000",
+    "Compression" : "1",
+    "Allowed file types" : "txt,pdf,png"
 }
