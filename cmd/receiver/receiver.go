@@ -35,6 +35,13 @@ func main() {
 	}
 	infoLog.Printf("Configuration file %s was openned", *configFile)
 
+	// Смена рабочей директории
+	err = os.Chdir(config.DirectoryForFownloadedFiles)
+	if err != nil {
+		errorLog.Fatalf("Cannont change work directory: %s", err)
+	}
+	infoLog.Printf("Change work directory -> %s", config.DirectoryForFownloadedFiles)
+
 	lAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%s", "0.0.0.0", config.LocalPort))
 	if err != nil {
 		errorLog.Fatalf("Cannot resolve local address: %s\n", fmt.Sprintf(config.LocalAddress, config.LocalPort))
