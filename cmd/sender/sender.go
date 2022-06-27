@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/itaraxa/simple-potato/internal/fileOperation"
@@ -31,10 +33,10 @@ func main() {
 		errorLog.Fatalln("Incorrect parameter in configuration file: ", err)
 	}
 
-	infoLog.Printf("Switch to temporary folder: %s", config.DirectoryForTemporaryFiles)
-	err = os.Chdir(config.DirectoryForTemporaryFiles)
+	infoLog.Printf("Switch to temporary folder: %s", config.DirectoryForNewFiles)
+	err = os.Chdir(config.DirectoryForNewFiles)
 	if err != nil {
-		errorLog.Fatalf("Cannot switch to temporary folder: %s", config.DirectoryForTemporaryFiles)
+		errorLog.Fatalf("Cannot switch to temporary folder: %s", config.DirectoryForNewFiles)
 	}
 
 	infoLog.Println("Search files in current work directory")
@@ -82,6 +84,10 @@ func main() {
 			continue
 		}
 
+		err = MoveFile(fileName, config.DirectoryForUploadedFiles)
+		if err != nil {
+			errorLog.Printf("error moving file %s : %s", fileName, err)
+		}
 		time.Sleep(1000 * time.Millisecond)
 
 	}
@@ -89,4 +95,54 @@ func main() {
 	infoLog.Printf("End connection to %s", fmt.Sprintf("%s:%s", config.SendToAddress, config.SendToPort))
 
 	infoLog.Println("END PROGRAMM")
+}
+
+func MoveFile(src, dstDir string) error {
+	sep := string(os.PathSeparator)
+	path := strings.Split(src, sep)
+	fileName := path[len(path)-1]
+	fullDstDir := dstDir + sep + strings.Join(path[1:len(path)-1], sep)
+
+	if _, err := os.Stat(fullDstDir); os.IsNotExist(err) {
+		err2 := os.MkdirAll(fullDstDir, 0760)
+		if err2 != nil {
+			return fmt.Errorf("cannot create directory: %s", err2)
+		}
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	dest, err := os.Create(fullDstDir + sep + fileName)
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+
+	buf := make([]byte, 4*1024)
+
+	for {
+		n, err := source.Read(buf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if n == 0 {
+			break
+		}
+		if _, err := dest.Write(buf[:n]); err != nil {
+			return err
+		}
+	}
+
+	source.Close()
+	err = os.Remove(src)
+	if err != nil {
+		return fmt.Errorf("cannot remove file %s: %s", src, err)
+	}
+
+	// fmt.Printf("Directory: %s -> %s\n", src, fullDstDir)
+	return nil
 }

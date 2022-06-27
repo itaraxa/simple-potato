@@ -7,7 +7,7 @@ import (
 )
 
 type receiverConfig struct {
-	DirectoryForFownloadedFiles string `json:"Directory for downloaded files"`
+	DirectoryForDownloadedFiles string `json:"Directory for downloaded files"`
 	DirectoryForTemporaryFiles  string `json:"Directory for temporary files"`
 	RemoteAddress               string `json:"Remote Address"`
 	LocalPort                   string `json:"Local Port"`
@@ -43,8 +43,8 @@ func (c *receiverConfig) checkConfig() error {
 	if _, err := os.Stat(c.DirectoryForTemporaryFiles); os.IsNotExist(err) {
 		return fmt.Errorf("directory %s not exist: %s", c.DirectoryForTemporaryFiles, err)
 	}
-	if _, err := os.Stat(c.DirectoryForFownloadedFiles); os.IsNotExist(err) {
-		return fmt.Errorf("directory %s not exist: %s", c.DirectoryForFownloadedFiles, err)
+	if _, err := os.Stat(c.DirectoryForDownloadedFiles); os.IsNotExist(err) {
+		return fmt.Errorf("directory %s not exist: %s", c.DirectoryForDownloadedFiles, err)
 	}
 
 	return nil

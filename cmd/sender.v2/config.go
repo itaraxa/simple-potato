@@ -12,7 +12,7 @@ type senderConfig struct {
 	SendFromAddress           string `json:"Send from Address"`
 	DirectoryForNewFiles      string `json:"Directory for new files"`
 	DirectoryForUploadedFiles string `json:"Directory for uploaded files"`
-	CycleTimeMs               string `json:"Cycle time (ms)"`
+	CycleTimeMs               int    `json:"Cycle time (ms)"`
 	AllowedFileTypes          string `json:"Allowed file types"`
 }
 

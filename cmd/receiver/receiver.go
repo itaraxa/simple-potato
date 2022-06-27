@@ -36,11 +36,11 @@ func main() {
 	infoLog.Printf("Configuration file %s was openned", *configFile)
 
 	// Смена рабочей директории
-	err = os.Chdir(config.DirectoryForFownloadedFiles)
+	err = os.Chdir(config.DirectoryForDownloadedFiles)
 	if err != nil {
 		errorLog.Fatalf("Cannont change work directory: %s", err)
 	}
-	infoLog.Printf("Change work directory -> %s", config.DirectoryForFownloadedFiles)
+	infoLog.Printf("Change work directory -> %s", config.DirectoryForDownloadedFiles)
 
 	lAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%s", "0.0.0.0", config.LocalPort))
 	if err != nil {
