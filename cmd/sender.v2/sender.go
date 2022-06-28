@@ -78,34 +78,34 @@ func main() {
 			SessionID++
 			infoLog.Printf("Start new session %d for file: %s\n", SessionID, file)
 			wg.Add(1)
-			go func(infoLog *log.Logger, errorLog *log.Logger, wg *sync.WaitGroup, config *senderConfig, SessionID uint32) {
+			relativePath := "." + file[len(config.DirectoryForNewFiles):]
+			go func(infoLog *log.Logger, errorLog *log.Logger, wg *sync.WaitGroup, config *senderConfig, SessionID uint32, fileName string) {
 				defer wg.Done()
 				defer infoLog.Printf("Session %d was ended\n", SessionID)
 
 				// 2.1
-				err := checkFile(infoLog, errorLog, config, file, SessionID)
+				err := checkFile(infoLog, errorLog, config, fileName, SessionID)
 				if err != nil {
 					return
 				}
-				infoLog.Printf("File: %s(SessionID=%d) was accepted\n", file, SessionID)
+				infoLog.Printf("File: %s(SessionID=%d) was accepted\n", fileName, SessionID)
 				// 2.2
-				err = sendFile(infoLog, errorLog, config, conn, file, SessionID)
+				err = sendFile(infoLog, errorLog, config, conn, fileName, SessionID)
 				if err != nil {
 					return
 				}
-				infoLog.Printf("File: %s(SessionID=%d) was sended\n", file, SessionID)
+				infoLog.Printf("File: %s(SessionID=%d) was sended\n", fileName, SessionID)
 				// 2.3
-				// err = moveFile(infoLog, errorLog, config, file, SessionID)
-				// if err != nil {
-				// 	return
-				// }
-				// infoLog.Printf("File: %s(SessionID=%d) was moved\n", file, SessionID)
-			}(infoLog, errorLog, wg, config, SessionID)
-
-			wg.Wait()
+				err = moveFile(infoLog, errorLog, config, fileName, SessionID)
+				if err != nil {
+					return
+				}
+				infoLog.Printf("File: %s(SessionID=%d) was moved\n", fileName, SessionID)
+			}(infoLog, errorLog, wg, config, SessionID, relativePath)
 		}
+		wg.Wait()
 		// DEBUG
-		break
+		// break
 	}
 
 }

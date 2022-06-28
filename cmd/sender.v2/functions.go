@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/itaraxa/simple-potato/internal/fileOperation"
 	"github.com/itaraxa/simple-potato/internal/session"
@@ -39,7 +40,18 @@ func checkFile(infoLog *log.Logger, errorLog *log.Logger, config *senderConfig, 
  */
 func sendFile(infoLog *log.Logger, errorLog *log.Logger, config *senderConfig, conn *net.UDPConn, file string, SessionID uint32) error {
 	s := session.NewSession(SessionID)
-	s.SendFile(conn)
+	err := s.ReadFile(file)
+	if err != nil {
+		errorLog.Printf("error read file: %s : %s\n", file, err)
+		return fmt.Errorf("error read file: %s : %s", file, err)
+	}
+	err = s.SendFile(conn)
+	if err != nil {
+		errorLog.Printf("error send file: %s : %s\n", file, err)
+		return fmt.Errorf("error send file: %s : %s", file, err)
+	}
+
+	time.Sleep(1000 * time.Millisecond)
 
 	return nil
 }

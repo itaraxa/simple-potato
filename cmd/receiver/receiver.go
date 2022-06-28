@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"github.com/itaraxa/simple-potato/internal/session"
 )
@@ -54,7 +55,6 @@ func main() {
 	defer socket.Close()
 	infoLog.Printf("Listening local address: %s", fmt.Sprintf("%s:%s", "0.0.0.0", config.LocalPort))
 
-	//var Sessions map[uint32]*session.Session
 	Sessions := make(map[uint32]*session.Session)
 
 STOPMAINLOOP:
@@ -116,11 +116,11 @@ STOPMAINLOOP:
 				// fmt.Printf("| ID: %4d | %4d | %4d bytes | %4d bytes | 0x%x | 0x%x | %s |\n", SessionID, msgType, fileSize, zipFileSize, fileMd5, zipFileMd5, fileName)
 
 				// DEBUG
-				fmt.Printf(">>> FilenameLength: %d\n", fileNameLength)
-				fmt.Printf(">>> FileSize: %d\n", fileSize)
-				fmt.Printf(">>> ZipFileSize: %d\n", zipFileSize)
-				fmt.Printf(">>> md5: 0x%x, 0x%x\n", fileMd5, zipFileMd5)
-				fmt.Printf(">>> Filename: %s (0x%x)\n", fileName, buf[78:78+fileNameLength])
+				// fmt.Printf(">>> FilenameLength: %d\n", fileNameLength)
+				// fmt.Printf(">>> FileSize: %d\n", fileSize)
+				// fmt.Printf(">>> ZipFileSize: %d\n", zipFileSize)
+				// fmt.Printf(">>> md5: 0x%x, 0x%x\n", fileMd5, zipFileMd5)
+				// fmt.Printf(">>> Filename: %s (0x%x)\n", fileName, buf[78:78+fileNameLength])
 			}
 		case 2:
 			{
@@ -140,14 +140,14 @@ STOPMAINLOOP:
 				// fmt.Printf("| ID: %4d | %4d | %4d | %4d bytes | %4d bytes |\n", SessionID, msgType, chankID, chankSize, len(data))
 
 				// DEBUG
-				fmt.Printf(">>> ChankID: %d, ChankSize: %d bytes\n", chankID, chankSize)
+				// fmt.Printf(">>> ChankID: %d, ChankSize: %d bytes\n", chankID, chankSize)
 				// fmt.Printf(">>> Data: 0x%x\n", data)
 			}
 		case 4:
 			{
 				// Обработка пакета с управляющим сообщением
 				command := int(buf[15])
-				dataLength, err := binary.ReadVarint(bytes.NewBuffer(buf[16:26]))
+				_, err := binary.ReadVarint(bytes.NewBuffer(buf[16:26]))
 				if err != nil {
 					errorLog.Printf("Error parse control pocket: %s", err)
 				}
@@ -163,11 +163,17 @@ STOPMAINLOOP:
 				case 2:
 					{
 						// Конец передачи файла
-						err = Sessions[SessionID].Flash()
-						if err != nil {
-							errorLog.Printf("Error getting file: %s", err)
-						}
-						delete(Sessions, SessionID)
+						go func(SessionID uint32) {
+							// Откладывем сохранение данных
+							time.Sleep(500 * time.Millisecond)
+
+							err = Sessions[SessionID].Flash()
+							if err != nil {
+								errorLog.Printf("Error getting file: %s", err)
+							}
+							delete(Sessions, SessionID)
+						}(SessionID)
+
 					}
 				case 4:
 					{
@@ -179,8 +185,8 @@ STOPMAINLOOP:
 				//fmt.Printf("| ID: %4d | %4d | b%4d | %d bytes |\n", SessionID, msgType, command, dataLength)
 
 				// DEBUG
-				fmt.Printf(">>> Command: %d\n", command)
-				fmt.Printf(">>> DataLength: %d bytes\n", dataLength)
+				// fmt.Printf(">>> Command: %d\n", command)
+				// fmt.Printf(">>> DataLength: %d bytes\n", dataLength)
 
 			}
 		}

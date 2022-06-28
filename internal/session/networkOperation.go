@@ -23,7 +23,7 @@ func (s *Session) Flash() error {
 		}
 
 		// DEBUG
-		fmt.Printf(">>> Getted zip-data - OK: md5=0x%x\n", s.zipFileMd5)
+		// fmt.Printf(">>> Getted zip-data - OK: md5=0x%x\n", s.zipFileMd5)
 	} else {
 		return fmt.Errorf("incorrect getted zip-data md5 sum\n>>> Data: 0x%x", s.zipData)
 	}
@@ -157,7 +157,7 @@ func (s *Session) sendCommandMsg(con net.Conn, command string, data []byte) (err
 	}
 
 	// DEBUG
-	fmt.Printf(">>> CMD_MSG: %d\n0x%x\n", s.ID, msg)
+	// fmt.Printf(">>> CMD_MSG: %d\n0x%x\n", s.ID, msg)
 
 	return nil
 }
@@ -202,9 +202,9 @@ func (s *Session) sendMetadataMsg(con net.Conn) error {
 	}
 
 	// DEBUG
-	fmt.Printf(">>> len(buf)= %d bytes, buf= 0x%x\n", len(buf), buf)
-	fmt.Printf(">>> filename: %s\n", s.fullFileName)
-	fmt.Printf(">>> MTD_MSG: %d\n0x%x\n", s.ID, msg)
+	// fmt.Printf(">>> len(buf)= %d bytes, buf= 0x%x\n", len(buf), buf)
+	// fmt.Printf(">>> filename: %s\n", s.fullFileName)
+	// fmt.Printf(">>> MTD_MSG: %d\n0x%x\n", s.ID, msg)
 
 	return nil
 }
