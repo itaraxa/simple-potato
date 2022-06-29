@@ -25,7 +25,7 @@ func (s *Session) Flash() error {
 		// DEBUG
 		// fmt.Printf(">>> Getted zip-data - OK: md5=0x%x\n", s.zipFileMd5)
 	} else {
-		return fmt.Errorf("incorrect getted zip-data md5 sum\n>>> Data: 0x%x", s.zipData)
+		return fmt.Errorf("incorrect getted zip-data md5 sum for file: %s", s.fileName)
 	}
 
 	// if !s.checkData() {
@@ -50,7 +50,7 @@ func (s *Session) AddData(chankID, chankSize uint32, data []byte) error {
 /* Получение и запись в структуру метаданных файла
  */
 func (s *Session) AddMetaData(fullFileName string, fileSize, zipFileSize uint32, fileMd5, zipFileMd5 []byte) error {
-	s.fullFileName = fullFileName
+	s.FullFileName = fullFileName
 	s.fileSize = fileSize
 	s.zipFileSize = zipFileSize
 	s.fileMd5 = fileMd5
@@ -176,7 +176,7 @@ func (s *Session) sendMetadataMsg(con net.Conn) error {
 
 	// указываем длину имени файла
 	buf := make([]byte, binary.MaxVarintLen64)
-	_ = binary.PutVarint(buf, int64(len(s.fullFileName)))
+	_ = binary.PutVarint(buf, int64(len(s.FullFileName)))
 	msg = append(msg, buf...)
 
 	// указываем размер файла
@@ -192,7 +192,7 @@ func (s *Session) sendMetadataMsg(con net.Conn) error {
 	msg = append(msg, s.zipFileMd5...)
 
 	// записываем имя файла
-	msg = append(msg, []byte(s.fullFileName)...)
+	msg = append(msg, []byte(s.FullFileName)...)
 
 	msg = append(msg, []byte("\r\n")...)
 

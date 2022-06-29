@@ -12,7 +12,7 @@ type chank struct {
 
 type Session struct {
 	ID           uint32
-	fullFileName string
+	FullFileName string
 	fileSize     uint32
 	zipFileSize  uint32
 	fileMd5      []byte

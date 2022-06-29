@@ -33,7 +33,7 @@ func (s *Session) ReadFile(fileName string) error {
 		fileSize += uint32(n)
 		s.data = append(s.data, buf[:n]...)
 	}
-	s.fullFileName = fileName
+	s.FullFileName = fileName
 	s.fileSize = fileSize
 	t := md5.Sum(s.data)
 	s.fileMd5 = t[:]
@@ -138,10 +138,10 @@ func (s *Session) checkZipData() bool {
  */
 func (s *Session) splitDirFileName() (dirName string, fileName string, err error) {
 	sep := string(os.PathSeparator)
-	t := strings.Split(s.fullFileName, sep)
+	t := strings.Split(s.FullFileName, sep)
 
-	dirName = strings.Join(t[:strings.Count(s.fullFileName, sep)], sep)
-	fileName = t[strings.Count(s.fullFileName, sep)]
+	dirName = strings.Join(t[:strings.Count(s.FullFileName, sep)], sep)
+	fileName = t[strings.Count(s.FullFileName, sep)]
 
 	return dirName, fileName, nil
 }
@@ -154,7 +154,7 @@ func (s *Session) writeDataToFile() error {
 		return fmt.Errorf("cannot create directory: %s", err)
 	}
 
-	file, err := os.Create(s.fullFileName)
+	file, err := os.Create(s.FullFileName)
 	if err != nil {
 		return fmt.Errorf("cannot create file: %s", err)
 	}

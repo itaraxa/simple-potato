@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/itaraxa/simple-potato/internal/session"
@@ -17,7 +18,7 @@ func main() {
 
 	// Initialize logging
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	infoLog.Println("START PROGRAMM")
 
@@ -56,6 +57,8 @@ func main() {
 	infoLog.Printf("Listening local address: %s", fmt.Sprintf("%s:%s", "0.0.0.0", config.LocalPort))
 
 	Sessions := make(map[uint32]*session.Session)
+	var SessionsMutex sync.Mutex
+	// a := new(sync.Map)
 
 STOPMAINLOOP:
 	for {
@@ -68,6 +71,7 @@ STOPMAINLOOP:
 
 		// Пропускаем пакет, если он не наш
 		if string(buf[:4]) != "RASU" {
+			errorLog.Printf("Get strange pocket: %x\n", buf[:4])
 			continue
 		}
 
@@ -77,13 +81,14 @@ STOPMAINLOOP:
 			errorLog.Printf("error getting Session ID: %s", err)
 		}
 		SessionID := uint32(temp)
+		// infoLog.Printf("get sessionID from pocket: %d", SessionID)
 
 		// Проверяем тип пакета
 		msgType := int(buf[14])
 
 		// DEBUG
-		fmt.Printf("\n>>> SessionID: %d\n", SessionID)
-		fmt.Printf(">>> MSG TYPE: %d\n", msgType)
+		// fmt.Printf("\n>>> SessionID: %d\n", SessionID)
+		// fmt.Printf(">>> MSG TYPE: %d\n", msgType)
 
 		switch msgType {
 		case 1:
@@ -108,7 +113,11 @@ STOPMAINLOOP:
 				zipFileMd5 := buf[62:78]
 				fileName := string(buf[78 : 78+fileNameLength])
 
+				SessionsMutex.Lock()
 				err = Sessions[SessionID].AddMetaData(fileName, uint32(fileSize), uint32(zipFileSize), fileMd5, zipFileMd5)
+				SessionsMutex.Unlock()
+
+				infoLog.Printf("Get metadata pocket: SessionID=%d filename=%s md5=0x%x", SessionID, fileName, fileMd5)
 				if err != nil {
 					errorLog.Printf("Error write metadata: %s", err)
 				}
@@ -135,7 +144,10 @@ STOPMAINLOOP:
 				}
 				data := buf[35 : 35+chankSize]
 
+				SessionsMutex.Lock()
 				_ = Sessions[SessionID].AddData(uint32(chankID), uint32(chankSize), data)
+				SessionsMutex.Unlock()
+				// infoLog.Printf("Get data for %d session\n", SessionID)
 
 				// fmt.Printf("| ID: %4d | %4d | %4d | %4d bytes | %4d bytes |\n", SessionID, msgType, chankID, chankSize, len(data))
 
@@ -159,6 +171,7 @@ STOPMAINLOOP:
 						// Начало передачи файла
 						// Создание новой сессии
 						Sessions[SessionID] = session.NewSession(SessionID)
+						// infoLog.Printf("Start new session: %d\n", SessionID)
 					}
 				case 2:
 					{
@@ -167,11 +180,14 @@ STOPMAINLOOP:
 							// Откладывем сохранение данных
 							time.Sleep(500 * time.Millisecond)
 
+							SessionsMutex.Lock()
 							err = Sessions[SessionID].Flash()
+							infoLog.Printf("File %s saved\n", Sessions[SessionID].FullFileName)
 							if err != nil {
 								errorLog.Printf("Error getting file: %s", err)
 							}
 							delete(Sessions, SessionID)
+							SessionsMutex.Unlock()
 						}(SessionID)
 
 					}
