@@ -79,7 +79,7 @@ func (s *Session) SendFile(conn net.Conn) error {
 	}
 
 	// Для того что бы receiver успел создать объект
-	time.Sleep(500 * time.Microsecond)
+	time.Sleep(100 * time.Microsecond)
 
 	err = s.sendMetadataMsg(conn)
 	if err != nil {
@@ -242,7 +242,7 @@ func (s *Session) sendDataMsg(con net.Conn) error {
 			return fmt.Errorf("error sending data: send %d/%d bytes : %s", n, len(msg), err)
 		}
 
-		time.Sleep(100 * time.Microsecond)
+		time.Sleep(20 * time.Microsecond)
 	}
 
 	return nil
