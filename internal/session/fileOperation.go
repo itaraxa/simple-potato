@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 )
 
 /* Чтение файла и запись данных в структуру
@@ -28,10 +29,12 @@ func (s *Session) ReadFile(fileName string) error {
 			if err != io.EOF {
 				return fmt.Errorf("error reading data from file: %s : %s", fileName, err)
 			}
-			break
 		}
 		fileSize += uint32(n)
 		s.data = append(s.data, buf[:n]...)
+		if n == 0 {
+			break
+		}
 	}
 	s.FullFileName = fileName
 	s.fileSize = fileSize
@@ -106,9 +109,9 @@ func (s *Session) unzipFile() error {
 	}
 
 	// DEBUG
-	// fmt.Printf(">>>> File Size afer unzip: %d bytes, from metadata: %d bytes\n", fileSize, s.fileSize)
-	// time.Sleep(1000 * time.Millisecond)
 
+	fmt.Printf(">>>> File Size afer unzip: %d bytes, from metadata: %d bytes\n", fileSize, s.fileSize)
+	time.Sleep(1000 * time.Millisecond)
 	return nil
 }
 
@@ -116,23 +119,29 @@ func (s *Session) unzipFile() error {
  */
 func (s *Session) checkZipData() bool {
 	t := md5.Sum(s.zipData)
-
+	if bytes.Equal(s.zipFileMd5, t[:]) {
+		return true
+	}
 	// DEBUG
-	// fmt.Printf(">>>Getted zip-data md5: 0x%x 0x%x\n", s.zipFileMd5, t[:])
 
-	return bytes.Equal(s.zipFileMd5, t[:])
+	fmt.Printf(">>>Getted zip-data md5: 0x%x 0x%x\n", s.zipFileMd5, t[:])
+
+	return false
 }
 
-// /* Сравнение md5 суммы полученных данных и md5 полученной в метаданных
-//  */
-// func (s *Session) checkData() bool {
-// 	t := md5.Sum(s.data)
+/* Сравнение md5 суммы полученных данных и md5 полученной в метаданных
+ */
+func (s *Session) checkData() bool {
+	t := md5.Sum(s.data)
+	if bytes.Equal(s.fileMd5, t[:]) {
+		return true
+	}
+	// DEBUG
 
-// 	// DEBUG
-// 	// fmt.Printf(">>>Getted data md5: 0x%x 0x%x\n", s.fileMd5, t[:])
+	fmt.Printf(">>>Getted data md5: 0x%x 0x%x\n", s.fileMd5, t[:])
 
-// 	return bytes.Equal(s.fileMd5, t[:])
-// }
+	return false
+}
 
 /* Разделение полного пути на директорию и имя файла
  */
@@ -163,9 +172,6 @@ func (s *Session) writeDataToFile() error {
 	if _, err = file.Write(s.data); err != nil {
 		return fmt.Errorf("cannot write data to file: %s", err)
 	}
-
-	// DEBUG
-	// fmt.Printf(">>> File %s created\n", s.fullFileName)
 
 	return nil
 }

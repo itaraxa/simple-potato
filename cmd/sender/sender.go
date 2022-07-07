@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	runtime.GOMAXPROCS(2)
+	runtime.GOMAXPROCS(4)
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
@@ -81,7 +81,7 @@ func main() {
 			SessionID++
 			infoLog.Printf("Start new session %d for file: %s\n", SessionID, file)
 			wg.Add(1)
-			relativePath := "." + file[len(config.DirectoryForNewFiles):]
+			// relativePath := "." + file[len(config.DirectoryForNewFiles):]
 			go func(infoLog *log.Logger, errorLog *log.Logger, wg *sync.WaitGroup, config *senderConfig, SessionID uint32, fileName string) {
 				defer wg.Done()
 				defer infoLog.Printf("Session %d was ended\n", SessionID)
@@ -104,7 +104,7 @@ func main() {
 					return
 				}
 				infoLog.Printf("File: %s(SessionID=%d) was moved\n", fileName, SessionID)
-			}(infoLog, errorLog, wg, config, SessionID, relativePath)
+			}(infoLog, errorLog, wg, config, SessionID, file)
 		}
 		wg.Wait()
 		// DEBUG

@@ -2,8 +2,8 @@
     "Send to Port" : "30000",
     "Send to Address" : "127.0.0.1",
     "Send from Address" : "127.0.0.1",
-    "Directory for new files" : "/home/itaraxa/Go/src/github.com/itaraxa/simple-potato/test/sender/new/",
-    "Directory for uploaded files" : "/home/itaraxa/Go/src/github.com/itaraxa/simple-potato/test/sender/sended",
+    "Directory for new files" : "test/sender/new/",
+    "Directory for uploaded files" : "../sended",
     "Cycle time (ms)" : 5000,
     "Allowed file types" : "txt,pdf,png"
 }

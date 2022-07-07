@@ -17,7 +17,8 @@ import (
  */
 func searchNewFiles(infoLog *log.Logger, errorLog *log.Logger, config *senderConfig) ([]string, error) {
 
-	fileNames, err := fileOperation.ScanDir(config.DirectoryForNewFiles)
+	// fileNames, err := fileOperation.ScanDir(config.DirectoryForNewFiles)
+	fileNames, err := fileOperation.ScanDir(".")
 	if err != nil {
 		errorLog.Println("scanning directory error: ", err)
 		return nil, err
