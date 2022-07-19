@@ -2,4 +2,6 @@ log/*
 out/*
 test/sender/*
 test/receiver/*
+venv/
+dist/
 

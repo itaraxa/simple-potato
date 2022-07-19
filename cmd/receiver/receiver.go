@@ -15,10 +15,16 @@ import (
 )
 
 func main() {
-
 	// Initialize logging
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// Protecct from Panic
+	defer func() {
+		if err := recover(); err != nil {
+			errorLog.Fatalf("Fatal error: %v", err)
+		}
+	}()
 
 	infoLog.Println("START PROGRAMM")
 

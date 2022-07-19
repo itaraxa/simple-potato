@@ -18,11 +18,15 @@ run_with_log: build
 	out/receiver --config config/receiverConfig.json >> log/receiver.log 2>> log/receiver.log &
 	out/sender --config config/senderConfig.json >> log/sender.log 2>> log/sender.log &
 
+build_payload_generator:
+	pyinstaller -F test/payload_generator.py
+
 clean:
 	clear
 	go clean
-	rm -rf out/*
-	rm log/*
-	rm -rf test/receiver/tmp/*
-	rm -rf test/receiver/downloaded/*
+	rm -rfi out/*
+	rm -fi log/*
+	rm -rfi test/receiver/tmp/*
+	rm -rfi test/receiver/downloaded/*
+	rm -rfi dist/*
 	mv test/sender/sended/* test/sender/new/
