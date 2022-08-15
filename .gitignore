@@ -2,6 +2,7 @@ log/*
 out/*
 test/sender/*
 test/receiver/*
+test/tmp2/*
 venv/
 dist/
 
