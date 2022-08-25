@@ -5,28 +5,31 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/itaraxa/simple-potato/internal/session"
+	log "github.com/sirupsen/logrus"
 )
 
-func main() {
-	// Initialize logging
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+func init() {
+	// Настройка логирования
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
 
-	// Protecct from Panic
+func main() {
+	log.WithTime(time.Now()).Info("Receiver started")
+
+	// Protect from Panic
 	defer func() {
 		if err := recover(); err != nil {
-			errorLog.Fatalf("Fatal error: %v", err)
+			log.WithFields(log.Fields{"Error": err}).Fatal("Fatal error -> Receiver closed")
 		}
 	}()
-
-	infoLog.Println("START PROGRAMM")
 
 	// Read configuration file
 	configFile := flag.String("config", "receiver.json", "Configuration file for receiver")
@@ -35,32 +38,42 @@ func main() {
 	config := new(receiverConfig)
 	err := config.loadConfig(*configFile)
 	if err != nil {
-		errorLog.Fatalln("Error read configuration file: ", err)
+		log.WithFields(log.Fields{"Error": err,
+			"Configuration file": *configFile}).Fatal("Error reading configuration file")
 	}
 	err = config.checkConfig()
 	if err != nil {
-		errorLog.Fatalln("Error in configuration file: ", err)
+		log.WithFields(log.Fields{"Error": err}).Fatal("Error in configuration file")
 	}
-	infoLog.Printf("Configuration file %s was openned", *configFile)
+	log.WithFields(log.Fields{"Configuration file": *configFile,
+		"LPort":                    config.LocalPort,
+		"LAddress":                 config.LocalAddress,
+		"RAddress":                 config.RemoteAddress,
+		"Temp files directory":     config.DirectoryForTemporaryFiles,
+		"Download files directory": config.DirectoryForDownloadedFiles}).Info("Configuration file was openned")
 
 	// Смена рабочей директории
 	err = os.Chdir(config.DirectoryForDownloadedFiles)
+	oldWorkDIr, _ := os.Getwd()
 	if err != nil {
-		errorLog.Fatalf("Cannont change work directory: %s", err)
+		log.WithFields(log.Fields{"Error": err}).Fatal("Error changing current work directory")
 	}
-	infoLog.Printf("Change work directory -> %s", config.DirectoryForDownloadedFiles)
+	newWorkDir, _ := os.Getwd()
+	log.WithFields(log.Fields{"Old work directory": oldWorkDIr,
+		"New work directory": newWorkDir}).Info("Workdir changed")
 
 	lAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%s", "0.0.0.0", config.LocalPort))
 	if err != nil {
-		errorLog.Fatalf("Cannot resolve local address: %s\n", fmt.Sprintf(config.LocalAddress, config.LocalPort))
+		log.WithFields(log.Fields{"Error": err, "LAddress": config.LocalAddress}).Fatal("Cannot resolve local address")
 	}
 
 	socket, err := net.ListenUDP("udp4", lAddr)
 	if err != nil {
-		errorLog.Fatalf("Cannot init listen UDP-connection: %s", err)
+		log.WithFields(log.Fields{"Error": err, "LPort": config.LocalPort}).Fatal("Cannot init listening UDP")
 	}
 	defer socket.Close()
-	infoLog.Printf("Listening local address: %s", fmt.Sprintf("%s:%s", "0.0.0.0", config.LocalPort))
+	log.WithFields(log.Fields{"LAddress": config.LocalAddress,
+		"LPort": config.LocalPort}).Info("Ready to listen")
 
 	Sessions := make(map[uint32]*session.Session)
 	var SessionsMutex sync.Mutex
@@ -71,20 +84,20 @@ STOPMAINLOOP:
 		var buf [1024]byte
 		_, _, err := socket.ReadFromUDP(buf[:])
 		if err != nil {
-			errorLog.Printf("Error reading data: %s", err)
+			log.WithFields(log.Fields{"Error": err}).Error("Error reading data")
 			continue
 		}
 
 		// Пропускаем пакет, если он не наш
 		if string(buf[:4]) != "RASU" {
-			errorLog.Printf("Get strange pocket: %x\n", buf[:4])
+			log.WithFields(log.Fields{"Error": err, "Package header": string(buf[:4])}).Error("Get strange pocket")
 			continue
 		}
 
 		// Получаем ID сессии
 		temp, err := binary.ReadVarint(bytes.NewBuffer(buf[4:14]))
 		if err != nil {
-			errorLog.Printf("error getting Session ID: %s", err)
+			log.WithFields(log.Fields{"Error": err}).Error("Error getting session ID")
 		}
 		SessionID := uint32(temp)
 		// infoLog.Printf("get sessionID from pocket: %d", SessionID)
@@ -105,15 +118,15 @@ STOPMAINLOOP:
 				// ZipMode := buf[15]
 				fileNameLength, err := binary.ReadVarint(bytes.NewBuffer(buf[16:26]))
 				if err != nil {
-					errorLog.Printf("Error parse metadata pocket: %s", err)
+					log.WithFields(log.Fields{"Error": err}).Error("Error parse metadata pocket")
 				}
 				fileSize, err := binary.ReadVarint(bytes.NewBuffer(buf[26:36]))
 				if err != nil {
-					errorLog.Printf("Error parse metadata pocket: %s", err)
+					log.WithFields(log.Fields{"Error": err}).Error("Error parse metadata pocket")
 				}
 				zipFileSize, err := binary.ReadVarint(bytes.NewBuffer(buf[36:46]))
 				if err != nil {
-					errorLog.Printf("Error parse metadata pocket: %s", err)
+					log.WithFields(log.Fields{"Error": err}).Error("Error parse metadata pocket")
 				}
 				fileMd5 := buf[46:62]
 				zipFileMd5 := buf[62:78]
@@ -123,9 +136,12 @@ STOPMAINLOOP:
 				err = Sessions[SessionID].AddMetaData(fileName, uint32(fileSize), uint32(zipFileSize), fileMd5, zipFileMd5)
 				SessionsMutex.Unlock()
 
-				infoLog.Printf("Get metadata pocket: SessionID=%d filename=%s md5=0x%x", SessionID, fileName, fileMd5)
+				log.WithFields(log.Fields{"SessionID": SessionID,
+					"File name": fileName,
+					"MD5 summ":  fmt.Sprintf("0x%x", fileMd5)}).Info("Get metadata pocket")
+
 				if err != nil {
-					errorLog.Printf("Error write metadata: %s", err)
+					log.WithFields(log.Fields{"Error": err}).Error("Error write metadata")
 				}
 
 				// DEBUG
@@ -141,11 +157,11 @@ STOPMAINLOOP:
 				// Обработка пакета с данными
 				chankID, err := binary.ReadVarint(bytes.NewBuffer(buf[15:25]))
 				if err != nil {
-					errorLog.Printf("Error parse data pocket: %s", err)
+					log.WithFields(log.Fields{"Error": err}).Error("Error parse data pocket")
 				}
 				chankSize, err := binary.ReadVarint(bytes.NewBuffer(buf[25:35]))
 				if err != nil {
-					errorLog.Printf("Error parse data pocket: %s", err)
+					log.WithFields(log.Fields{"Error": err}).Error("Error parse data pocket")
 				}
 				data := buf[35 : 35+chankSize]
 
@@ -165,7 +181,7 @@ STOPMAINLOOP:
 				command := int(buf[15])
 				_, err := binary.ReadVarint(bytes.NewBuffer(buf[16:26]))
 				if err != nil {
-					errorLog.Printf("Error parse control pocket: %s", err)
+					log.WithFields(log.Fields{"Error": err}).Error("Error parse control pocket")
 				}
 				// data := buf[26:26+dataLength]
 
@@ -186,10 +202,10 @@ STOPMAINLOOP:
 
 							SessionsMutex.Lock()
 							err = Sessions[SessionID].Flash()
-							infoLog.Printf("File %s saved\n", Sessions[SessionID].FullFileName)
 							if err != nil {
-								errorLog.Printf("Error getting file: %s", err)
+								log.WithFields(log.Fields{"Error": err}).Error("Error getting file")
 							}
+							log.WithFields(log.Fields{"File name": Sessions[SessionID].FullFileName}).Info("File saved")
 							delete(Sessions, SessionID)
 							SessionsMutex.Unlock()
 						}(SessionID)
@@ -211,6 +227,5 @@ STOPMAINLOOP:
 		}
 	}
 
-	infoLog.Println("END PROGRAMM")
-
+	log.WithTime(time.Now()).Info("Receiver closed")
 }
