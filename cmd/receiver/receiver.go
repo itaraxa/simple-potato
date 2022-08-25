@@ -128,9 +128,8 @@ STOPMAINLOOP:
 					errorLog.Printf("Error write metadata: %s", err)
 				}
 
-				// fmt.Printf("| ID: %4d | %4d | %4d bytes | %4d bytes | 0x%x | 0x%x | %s |\n", SessionID, msgType, fileSize, zipFileSize, fileMd5, zipFileMd5, fileName)
-
 				// DEBUG
+				// fmt.Printf("| ID: %4d | %4d | %4d bytes | %4d bytes | 0x%x | 0x%x | %s |\n", SessionID, msgType, fileSize, zipFileSize, fileMd5, zipFileMd5, fileName)
 				// fmt.Printf(">>> FilenameLength: %d\n", fileNameLength)
 				// fmt.Printf(">>> FileSize: %d\n", fileSize)
 				// fmt.Printf(">>> ZipFileSize: %d\n", zipFileSize)
@@ -153,11 +152,10 @@ STOPMAINLOOP:
 				SessionsMutex.Lock()
 				_ = Sessions[SessionID].AddData(uint32(chankID), uint32(chankSize), data)
 				SessionsMutex.Unlock()
-				// infoLog.Printf("Get data for %d session\n", SessionID)
-
-				// fmt.Printf("| ID: %4d | %4d | %4d | %4d bytes | %4d bytes |\n", SessionID, msgType, chankID, chankSize, len(data))
 
 				// DEBUG
+				// infoLog.Printf("Get data for %d session\n", SessionID)
+				// fmt.Printf("| ID: %4d | %4d | %4d | %4d bytes | %4d bytes |\n", SessionID, msgType, chankID, chankSize, len(data))
 				// fmt.Printf(">>> ChankID: %d, ChankSize: %d bytes\n", chankID, chankSize)
 				// fmt.Printf(">>> Data: 0x%x\n", data)
 			}
@@ -204,9 +202,8 @@ STOPMAINLOOP:
 					}
 				}
 
-				//fmt.Printf("| ID: %4d | %4d | b%4d | %d bytes |\n", SessionID, msgType, command, dataLength)
-
 				// DEBUG
+				// fmt.Printf("| ID: %4d | %4d | b%4d | %d bytes |\n", SessionID, msgType, command, dataLength)
 				// fmt.Printf(">>> Command: %d\n", command)
 				// fmt.Printf(">>> DataLength: %d bytes\n", dataLength)
 

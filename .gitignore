@@ -1,7 +1,13 @@
+# Application temporary files: logs, exe-files, e.t.c.
 log/*
 out/*
+
+# Data for testing
 test/sender/*
 test/receiver/*
+
+# Python directoryes
 venv/
 dist/
+build/
 

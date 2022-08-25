@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/k3x/go/src/github.com/itaraxa/simple-potato'
+go build -o out/receiver cmd/receiver/*.go | tee -a log/build.log
+go build -o out/sender cmd/sender/*.go | tee -a log/build.log
+make: Leaving directory '/home/k3x/go/src/github.com/itaraxa/simple-potato'
+ 

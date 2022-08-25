@@ -25,7 +25,7 @@ clean:
 	clear
 	go clean
 	rm -rfi out/*
-	rm -fi log/*
+	rm -rfi log/*
 	rm -rfi test/receiver/tmp/*
 	rm -rfi test/receiver/downloaded/*
 	rm -rfi dist/*
