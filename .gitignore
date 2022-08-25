@@ -5,8 +5,12 @@ out/*
 # Data for testing
 test/sender/*
 test/receiver/*
+<<<<<<< HEAD
 
 # Python directoryes
+=======
+test/tmp2/*
+>>>>>>> a81d00f790678b6e7b5b0f78ad8e2fc429d602ff
 venv/
 dist/
 build/
